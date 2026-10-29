@@ -1,0 +1,10 @@
+question: Pick a random planet in the Solar System.
+answers:
+  - Mercury
+  - Venus
+  - Earth
+  - Mars
+  - Jupiter
+  - Saturn
+  - Uranus
+  - Neptune
