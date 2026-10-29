@@ -5,7 +5,7 @@ import { generateText, Output } from "ai";
 import dotenv from "dotenv";
 import { load as parseYaml } from "js-yaml";
 
-const ITERATIONS_PER_ANSWER = 5;
+const ITERATIONS_PER_ANSWER = 3;
 
 dotenv.config();
 

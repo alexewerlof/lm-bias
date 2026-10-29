@@ -40,7 +40,7 @@ base URL your provider documents.
 ## Usage
 
 ```sh
-npm start -- animals.yml              # 5 × number of answers iterations
+npm start -- animals.yml              # 3 × number of answers iterations
 npm start -- animals.yml --iterations 50
 npm start -- animals.yml -i 50        # same, short flag
 ```
