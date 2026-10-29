@@ -75,10 +75,14 @@ for (let i = 1; i <= iterations; i++) {
   answerCounts[picked]++;
 }
 
+// Most-picked first. Array#sort is stable, so ties keep the listing order.
 console.table(
-  Object.entries(answerCounts).map(([option, picked]) => ({
-    option,
-    picked,
-    percent: `${((picked / iterations) * 100).toFixed(1)}%`,
-  })),
+  Object.entries(answerCounts)
+    .map(([option, picked]) => ({
+      option,
+      picked,
+      // One decimal place, but still a number so it prints unquoted.
+      percent: Math.round((picked / iterations) * 1000) / 10,
+    }))
+    .sort((a, b) => b.picked - a.picked),
 );
