@@ -1,5 +1,5 @@
 {
-  "name": "llm-random",
+  "name": "lm-bias",
   "version": "1.0.0",
   "description": "Ask any OpenAI-compatible model the same multiple-choice question N times and see how it distributes its answers.",
   "main": "index.js",

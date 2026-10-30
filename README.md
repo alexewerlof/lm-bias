@@ -1,4 +1,4 @@
-# llm-random
+# lm-bias
 
 Ask an OpenAI-compatible LLM the same multiple-choice question repeatedly and see
 how it spreads its answers.
