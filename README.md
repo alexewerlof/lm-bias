@@ -7,6 +7,8 @@ it assigns to each answer.
 - `lm.js` — language-model probe. Samples the answer many times.
 - `decision.js` — decision-model probe. Reads the whole probability distribution.
 
+✅ On the rush? [See the results](./RESULTS.md).
+
 ## Requirements
 
 - Node.js 24 (LTS) or newer
