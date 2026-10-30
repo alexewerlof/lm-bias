@@ -90,6 +90,7 @@ node lm.js binary-digit.yml
 │ 0       │ '1'    │ 6      │ 100     │
 │ 1       │ '0'    │ 0      │ 0       │
 └─────────┴────────┴────────┴─────────┘
+iterations: 6
 ```
 
 ```sh
@@ -119,6 +120,7 @@ node lm.js yes-no.yml
 │ 0       │ 'Yes'  │ 6      │ 100     │
 │ 1       │ 'No'   │ 0      │ 0       │
 └─────────┴────────┴────────┴─────────┘
+iterations: 6
 ```
 
 ```sh
@@ -151,6 +153,7 @@ node lm.js roulette.yml
 │ 0       │ 'Red'   │ 6      │ 100     │
 │ 1       │ 'Black' │ 0      │ 0       │
 └─────────┴─────────┴────────┴─────────┘
+iterations: 6
 ```
 
 ```sh
@@ -182,6 +185,7 @@ node lm.js card-suits.yml
 │ 2       │ 'Diamonds' │ 0      │ 0       │
 │ 3       │ 'Clubs'    │ 0      │ 0       │
 └─────────┴────────────┴────────┴─────────┘
+iterations: 12
 ```
 
 ```sh
@@ -216,6 +220,7 @@ node lm.js vowels.yml
 │ 3       │ 'O'    │ 0      │ 0       │
 │ 4       │ 'U'    │ 0      │ 0       │
 └─────────┴────────┴────────┴─────────┘
+iterations: 15
 ```
 
 ```sh
@@ -254,6 +259,7 @@ node lm.js dice.yml
 │ 4       │ '5'    │ 0      │ 0       │
 │ 5       │ '6'    │ 0      │ 0       │
 └─────────┴────────┴────────┴─────────┘
+iterations: 18
 ```
 
 ```sh
@@ -290,6 +296,7 @@ node lm.js ab-ba.yml
 │ 0       │ 'AB'   │ 6      │ 100     │
 │ 1       │ 'BA'   │ 0      │ 0       │
 └─────────┴────────┴────────┴─────────┘
+iterations: 6
 ```
 
 ```sh
@@ -322,6 +329,7 @@ node lm.js rand-1-to-3.yml
 │ 1       │ '1'    │ 0      │ 0       │
 │ 2       │ '3'    │ 0      │ 0       │
 └─────────┴────────┴────────┴─────────┘
+iterations: 9
 ```
 
 ```sh
@@ -359,6 +367,7 @@ node lm.js two-coins.yml
 │ 2       │ 'Heads, Heads' │ 0      │ 0       │
 │ 3       │ 'Tails, Tails' │ 0      │ 0       │
 └─────────┴────────────────┴────────┴─────────┘
+iterations: 12
 ```
 
 ```sh
@@ -392,6 +401,7 @@ node lm.js rand-1-to-5.yml
 │ 3       │ '2'    │ 0      │ 0       │
 │ 4       │ '5'    │ 0      │ 0       │
 └─────────┴────────┴────────┴─────────┘
+iterations: 15
 ```
 
 ```sh
@@ -423,6 +433,7 @@ node lm.js dice-parity.yml
 │ 0       │ 'Odd'  │ 3      │ 50      │
 │ 1       │ 'Even' │ 3      │ 50      │
 └─────────┴────────┴────────┴─────────┘
+iterations: 6
 ```
 
 ```sh
@@ -468,6 +479,7 @@ node lm.js numbers.yml -i 16
 │ 8       │ '9'    │ 0      │ 0       │
 │ 9       │ '10'   │ 0      │ 0       │
 └─────────┴────────┴────────┴─────────┘
+iterations: 16
 ```
 
 ```sh
@@ -499,6 +511,7 @@ node lm.js -i 13 coin-flip.yml
 │ 0       │ 'Heads' │ 12     │ 92.3    │
 │ 1       │ 'Tails' │ 1      │ 7.7     │
 └─────────┴─────────┴────────┴─────────┘
+iterations: 13
 ```
 
 ```sh
@@ -515,7 +528,7 @@ confidence: 0.702
 ### Colors
 
 ```sh
-node lm.js colors.yml
+node lm.js colors.yml -i 10
 ┌─────────┬───────────┬────────┬─────────┐
 │ (index) │ option    │ picked │ percent │
 ├─────────┼───────────┼────────┼─────────┤
@@ -539,6 +552,7 @@ node lm.js colors.yml
 │ 17      │ 'Olive'   │ 0      │ 0       │
 │ 18      │ 'Navy'    │ 0      │ 0       │
 └─────────┴───────────┴────────┴─────────┘
+iterations: 10
 ```
 
 ```sh
@@ -587,6 +601,7 @@ node lm.js animals.yml -i 30
 │ 8       │ 'Monkey'   │ 0      │ 0       │
 │ 9       │ 'Kangaroo' │ 0      │ 0       │
 └─────────┴────────────┴────────┴─────────┘
+iterations: 30
 ```
 
 ```sh
@@ -626,6 +641,7 @@ node lm.js fruits.yml -i 20
 │ 8       │ 'Melon'      │ 0      │ 0       │
 │ 9       │ 'Pear'       │ 0      │ 0       │
 └─────────┴──────────────┴────────┴─────────┘
+iterations: 20
 ```
 
 ```sh
@@ -650,7 +666,7 @@ confidence: 0.024
 ### Musical instruments
 
 ```sh
-node lm.js instruments.yml
+node lm.js instruments.yml -i 50
 ┌─────────┬─────────────┬────────┬─────────┐
 │ (index) │ option      │ picked │ percent │
 ├─────────┼─────────────┼────────┼─────────┤
@@ -665,6 +681,7 @@ node lm.js instruments.yml
 │ 8       │ 'Flute'     │ 0      │ 0       │
 │ 9       │ 'Trumpet'   │ 0      │ 0       │
 └─────────┴─────────────┴────────┴─────────┘
+iterations: 50
 ```
 
 ```sh
@@ -702,6 +719,7 @@ node lm.js planets.yml -i 20
 │ 6       │ 'Uranus'  │ 0      │ 0       │
 │ 7       │ 'Neptune' │ 0      │ 0       │
 └─────────┴───────────┴────────┴─────────┘
+iterations: 20
 ```
 
 ```sh
@@ -739,6 +757,7 @@ node lm.js pizza-toppings.yml
 │ 8       │ 'Olives'      │ 0      │ 0       │
 │ 9       │ 'Bell pepper' │ 0      │ 0       │
 └─────────┴───────────────┴────────┴─────────┘
+iterations: 30
 ```
 
 ```sh
@@ -780,6 +799,7 @@ node lm.js months.yml
 │ 10      │ 'November'  │ 0      │ 0       │
 │ 11      │ 'December'  │ 0      │ 0       │
 └─────────┴─────────────┴────────┴─────────┘
+iterations: 36
 ```
 
 ```sh
@@ -819,6 +839,7 @@ node lm.js nonsense-words.yml
 │ 6       │ 'Torp'  │ 0      │ 0       │
 │ 7       │ 'Nek'   │ 0      │ 0       │
 └─────────┴─────────┴────────┴─────────┘
+iterations: 24
 ```
 
 ```sh
@@ -853,6 +874,7 @@ node lm.js days.yml
 │ 5       │ 'Saturday'  │ 0      │ 0       │
 │ 6       │ 'Sunday'    │ 0      │ 0       │
 └─────────┴─────────────┴────────┴─────────┘
+iterations: 21
 ```
 
 ```sh
@@ -905,6 +927,7 @@ node lm.js letters.yml
 │ 24      │ 'Y'    │ 0      │ 0       │
 │ 25      │ 'Z'    │ 0      │ 0       │
 └─────────┴────────┴────────┴─────────┘
+iterations: 78
 ```
 
 ```sh
