@@ -8,6 +8,19 @@ was sampled), then the decision-model block (the probability each answer is give
 Both blocks are copied verbatim from the runs, so the `percent` columns are
 directly comparable.
 
+The tests fall into two families:
+
+- **Fair processes** ([part 1](#part-1--fair-processes)) — a bit, a coin, a die, a
+  deck, an alphabet. The question names a process that is random by construction,
+  so the correct answer distribution is known in advance. Deviating from it is
+  measurable bias, not a matter of taste.
+- **Category questions** ([part 2](#part-2--category-questions)) — animals, colors,
+  months, letters. There is no correct distribution here; they show which member
+  of a category the model reaches for first.
+
+Part 1 comes first because it has ground truth. It turns "the model seems to like
+`7`" into "eighteen fair dice rolls came up `4`, every single time".
+
 ## Models
 
 | Setting  | Language model                                  | Decision model                              |
@@ -26,7 +39,418 @@ every answer, so its blocks have no iteration count and no `picked` column, and 
 repeated call returns identical numbers. `confidence` is the model's own
 confidence in its pick, on a 0–1 scale.
 
-## Numbers
+## Part 1 — Fair processes
+
+Every question in this part describes a process that is random by construction —
+a bit, a coin, a die, a deck — so the correct answer distribution is known before
+the model is asked. A human answering honestly would be uniform. Whatever the
+model does instead is prior leakage, and because the expectation is exact it can
+be measured against a number instead of argued about.
+
+The headline sections are the experiments whose most-picked answer passed **95%**
+of all sampled iterations using the script's default count (3 × the number of
+answers, so 2 answers → 6 runs, 4 answers → 12). Anything held less strongly is
+kept under [Close calls and counter-examples](#close-calls-and-counter-examples)
+and labelled as such.
+
+### Summary
+
+| Question set       | Fair answer | Language model       | Decision model       |
+| ------------------ | ----------- | -------------------- | -------------------- |
+| `binary-digit.yml` | 50 / 50     | **100% `1`**         | 61.2% `1`            |
+| `yes-no.yml`       | 50 / 50     | **100% `Yes`**       | 61.4% `Yes`          |
+| `roulette.yml`     | 50 / 50     | **100% `Red`**       | 61.3% `Black`        |
+| `card-suits.yml`   | 25% each    | **100% `Spades`**    | 32.3% `Spades`       |
+| `vowels.yml`       | 20% each    | **100% `E`**         | 25.2% `E`            |
+| `dice.yml`         | 16.7% each  | **100% `4`**         | 28.4% `3`            |
+| `ab-ba.yml`        | 50 / 50     | **100% `AB`**        | 73.3% `BA`           |
+| `rand-1-to-3.yml`  | 33.3% each  | **100% `2`**         | 41.3% `3`            |
+| `two-coins.yml`    | 25% each    | 91.7% `Heads, Tails` | 32.5% `Heads, Heads` |
+| `rand-1-to-5.yml`  | 20% each    | 93.3% `4`            | 25.3% `4`            |
+| `dice-parity.yml`  | 50 / 50     | 50 / 50, unbiased    | 71.1% `Even`         |
+
+The visual pattern is the point: the language model is **not** a sampler that
+sometimes lands in the wrong place. Eight separate fair processes were answered
+unanimously, and the choice is always the option with the most mass among those
+offered — never the one a random draw would produce. The decision model never
+reaches certainty: roughly 60–73% on the two-option questions and under 45% on the
+rest, and on four questions it picks an answer the language model never picked at
+all (`roulette.yml`, `ab-ba.yml`, `rand-1-to-3.yml`, `dice.yml`).
+
+### A single bit
+
+A bit has exactly two states and no texture at all in human writing, so any
+preference here cannot come from taste.
+
+```sh
+node lm.js binary-digit.yml
+┌─────────┬────────┬────────┬─────────┐
+│ (index) │ option │ picked │ percent │
+├─────────┼────────┼────────┼─────────┤
+│ 0       │ '1'    │ 6      │ 100     │
+│ 1       │ '0'    │ 0      │ 0       │
+└─────────┴────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js binary-digit.yml
+┌─────────┬────────┬─────────┐
+│ (index) │ option │ percent │
+├─────────┼────────┼─────────┤
+│ 0       │ '1'    │ 61.2    │
+│ 1       │ '0'    │ 38.8    │
+└─────────┴────────┴─────────┘
+confidence: 0.224
+```
+
+`1` wins unanimously. `1` is the affirmative literal in code, the success exit
+code, `true`, the populated array — it appears in more contexts that mean "yes"
+than `0` does, and that asymmetry survives even when the question asks for a
+_random_ bit. The decision model shows the same direction but at the same mild
+strength it shows everywhere else.
+
+### Yes / No
+
+```sh
+node lm.js yes-no.yml
+┌─────────┬────────┬────────┬─────────┐
+│ (index) │ option │ picked │ percent │
+├─────────┼────────┼────────┼─────────┤
+│ 0       │ 'Yes'  │ 6      │ 100     │
+│ 1       │ 'No'   │ 0      │ 0       │
+└─────────┴────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js yes-no.yml
+┌─────────┬────────┬─────────┐
+│ (index) │ option │ percent │
+├─────────┼────────┼─────────┤
+│ 0       │ 'Yes'  │ 61.4    │
+│ 1       │ 'No'   │ 38.6    │
+└─────────┴────────┴─────────┘
+confidence: 0.227
+```
+
+The instruction is to pick a _random answer_, not to answer. Yet the model cannot
+produce `No` once in six tries. Assistant-tuned text is overwhelmingly helpful and
+affirming, so `Yes` sits where a "positive response" has to start — and a request
+to be random does not remove that pressure. Note that a `true-false.yml` set (same
+shape, different wording) came out only 4–2 for `False` and was discarded, so this
+is not simply "positivity wins"; the _specific strings_ carry the effect.
+
+### Roulette: red, or black?
+
+The clearest example of two models disagreeing about a 50/50.
+
+```sh
+node lm.js roulette.yml
+┌─────────┬─────────┬────────┬─────────┐
+│ (index) │ option  │ picked │ percent │
+├─────────┼─────────┼────────┼─────────┤
+│ 0       │ 'Red'   │ 6      │ 100     │
+│ 1       │ 'Black' │ 0      │ 0       │
+└─────────┴─────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js roulette.yml
+┌─────────┬─────────┬─────────┐
+│ (index) │ option  │ percent │
+├─────────┼─────────┼─────────┤
+│ 0       │ 'Black' │ 61.3    │
+│ 1       │ 'Red'   │ 38.7    │
+└─────────┴─────────┴─────────┘
+confidence: 0.227
+```
+
+The language model is unanimous for `Red`; the decision model leans to `Black`.
+Whichever prior drives the language model, it is not the one the classifier uses —
+and neither model comes close to the 50/50 the question promises. This is the
+strongest evidence that these results describe two different decision mechanisms
+rather than noise.
+
+### Card suits
+
+```sh
+node lm.js card-suits.yml
+┌─────────┬────────────┬────────┬─────────┐
+│ (index) │ option     │ picked │ percent │
+├─────────┼────────────┼────────┼─────────┤
+│ 0       │ 'Spades'   │ 12     │ 100     │
+│ 1       │ 'Hearts'   │ 0      │ 0       │
+│ 2       │ 'Diamonds' │ 0      │ 0       │
+│ 3       │ 'Clubs'    │ 0      │ 0       │
+└─────────┴────────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js card-suits.yml
+┌─────────┬────────────┬─────────┐
+│ (index) │ option     │ percent │
+├─────────┼────────────┼─────────┤
+│ 0       │ 'Spades'   │ 32.3    │
+│ 1       │ 'Clubs'    │ 28.5    │
+│ 2       │ 'Diamonds' │ 24.1    │
+│ 3       │ 'Hearts'   │ 15.1    │
+└─────────┴────────────┴─────────┘
+confidence: 0.097
+```
+
+Worth noting _which_ suit: `Spades` is listed **last**. It is also the highest
+card in most ranking conventions, and bridge/bidding text is full of spade-heavy
+praise. Both models agree here, which makes it a useful control against the naive
+explanation "the first item in the list wins" — that explanation fails on this
+data.
+
+### Vowels
+
+```sh
+node lm.js vowels.yml
+┌─────────┬────────┬────────┬─────────┐
+│ (index) │ option │ picked │ percent │
+├─────────┼────────┼────────┼─────────┤
+│ 0       │ 'E'    │ 15     │ 100     │
+│ 1       │ 'A'    │ 0      │ 0       │
+│ 2       │ 'I'    │ 0      │ 0       │
+│ 3       │ 'O'    │ 0      │ 0       │
+│ 4       │ 'U'    │ 0      │ 0       │
+└─────────┴────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js vowels.yml
+┌─────────┬────────┬─────────┐
+│ (index) │ option │ percent │
+├─────────┼────────┼─────────┤
+│ 0       │ 'E'    │ 25.2    │
+│ 1       │ 'O'    │ 20.4    │
+│ 2       │ 'I'    │ 19.2    │
+│ 3       │ 'A'    │ 17.9    │
+│ 4       │ 'U'    │ 17.2    │
+└─────────┴────────┴─────────┘
+confidence: 0.065
+```
+
+Fifteen out of fifteen for `E`. This is the most defensible bias in the set
+because it has a documented cause: `E` is the most common letter in English.
+Asking for a "random vowel" retrieves a frequency distribution rather than a
+uniform one. The decision model picks the same winner, but holds it at a quarter
+of the mass instead of all of it.
+
+### A six-sided die
+
+The single sharpest result in this collection.
+
+```sh
+node lm.js dice.yml
+┌─────────┬────────┬────────┬─────────┐
+│ (index) │ option │ picked │ percent │
+├─────────┼────────┼────────┼─────────┤
+│ 0       │ '4'    │ 18     │ 100     │
+│ 1       │ '1'    │ 0      │ 0       │
+│ 2       │ '2'    │ 0      │ 0       │
+│ 3       │ '3'    │ 0      │ 0       │
+│ 4       │ '5'    │ 0      │ 0       │
+│ 5       │ '6'    │ 0      │ 0       │
+└─────────┴────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js dice.yml
+┌─────────┬────────┬─────────┐
+│ (index) │ option │ percent │
+├─────────┼────────┼─────────┤
+│ 0       │ '3'    │ 28.4    │
+│ 1       │ '4'    │ 22.6    │
+│ 2       │ '6'    │ 19.7    │
+│ 3       │ '5'    │ 18      │
+│ 4       │ '2'    │ 7       │
+│ 5       │ '1'    │ 4.3     │
+└─────────┴────────┴─────────┘
+confidence: 0.141
+```
+
+Eighteen consecutive rolls of `4`, on a die the question explicitly calls _fair_.
+A player would notice. The model cannot. Like the `7` in `numbers.yml`, `4` is a
+well-worn single-token number (dice idioms, clocks, seasons, the "roll a 4"
+example), and the word "die" in the prompt pulls that token forward harder than
+"random" pushes the distribution flat.
+
+### AB or BA
+
+The cleanest available test of _ordering_ as a cause, because the two options are
+the same two characters.
+
+```sh
+node lm.js ab-ba.yml
+┌─────────┬────────┬────────┬─────────┐
+│ (index) │ option │ picked │ percent │
+├─────────┼────────┼────────┼─────────┤
+│ 0       │ 'AB'   │ 6      │ 100     │
+│ 1       │ 'BA'   │ 0      │ 0       │
+└─────────┴────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js ab-ba.yml
+┌─────────┬────────┬─────────┐
+│ (index) │ option │ percent │
+├─────────┼────────┼─────────┤
+│ 0       │ 'BA'   │ 73.3    │
+│ 1       │ 'AB'   │ 26.7    │
+└─────────┴────────┴─────────┘
+confidence: 0.465
+```
+
+The language model returns `AB` six times out of six; the decision model returns
+`BA` at 73%. Each picked one ordering, and they picked opposite ones. Neither
+picked at random. `AB` is the ordering convention (alphabet, patterns, chords,
+blood types), and a request for randomness does not dissolve convention — it just
+exposes it.
+
+### Numbers 1 to 3
+
+This one tests what happens when the favourite token is _not on the menu_.
+
+```sh
+node lm.js rand-1-to-3.yml
+┌─────────┬────────┬────────┬─────────┐
+│ (index) │ option │ picked │ percent │
+├─────────┼────────┼────────┼─────────┤
+│ 0       │ '2'    │ 9      │ 100     │
+│ 1       │ '1'    │ 0      │ 0       │
+│ 2       │ '3'    │ 0      │ 0       │
+└─────────┴────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js rand-1-to-3.yml
+┌─────────┬────────┬─────────┐
+│ (index) │ option │ percent │
+├─────────┼────────┼─────────┤
+│ 0       │ '3'    │ 41.3    │
+│ 1       │ '1'    │ 33.5    │
+│ 2       │ '2'    │ 25.2    │
+└─────────┴────────┴─────────┘
+confidence: 0.119
+```
+
+Nine out of nine for `2`. With `7` and `4` unavailable, the model does not spread
+its mass toward uniform — it collapses to the geometric centre of the offered
+range. The decision model does the exact opposite and gives the centre its
+_lowest_ probability. This is the result that most surprised me while designing
+these tests: the fallback is not "be more random", it is "be more average".
+
+### Close calls and counter-examples
+
+These are kept because the numbers are informative, not because they clear the
+95% bar. All three are reproducible with the same commands.
+
+#### Two coins — 91.7%
+
+```sh
+node lm.js two-coins.yml
+┌─────────┬────────────────┬────────┬─────────┐
+│ (index) │ option         │ picked │ percent │
+├─────────┼────────────────┼────────┼─────────┤
+│ 0       │ 'Heads, Tails' │ 11     │ 91.7    │
+│ 1       │ 'Tails, Heads' │ 1      │ 8.3     │
+│ 2       │ 'Heads, Heads' │ 0      │ 0       │
+│ 3       │ 'Tails, Tails' │ 0      │ 0       │
+└─────────┴────────────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js two-coins.yml
+┌─────────┬────────────────┬─────────┐
+│ (index) │ option         │ percent │
+├─────────┼────────────────┼─────────┤
+│ 0       │ 'Heads, Heads' │ 32.5    │
+│ 1       │ 'Tails, Heads' │ 23.4    │
+│ 2       │ 'Heads, Tails' │ 22.9    │
+│ 3       │ 'Tails, Tails' │ 21.1    │
+└─────────┴────────────────┴─────────┘
+confidence: 0.100
+```
+
+Four equally likely outcomes; two of them never occurred in twelve flips. The
+winner is `Heads, Tails` — the exact word order of the idiom "heads or tails", and
+not the alphabetical order (`Heads, Heads`) that the decision model prefers. The
+mechanism is memorised collocation rather than probability.
+
+#### Numbers 1 to 5 — 93.3%
+
+```sh
+node lm.js rand-1-to-5.yml
+┌─────────┬────────┬────────┬─────────┐
+│ (index) │ option │ picked │ percent │
+├─────────┼────────┼────────┼─────────┤
+│ 0       │ '4'    │ 14     │ 93.3    │
+│ 1       │ '3'    │ 1      │ 6.7     │
+│ 2       │ '1'    │ 0      │ 0       │
+│ 3       │ '2'    │ 0      │ 0       │
+│ 4       │ '5'    │ 0      │ 0       │
+└─────────┴────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js rand-1-to-5.yml
+┌─────────┬────────┬─────────┐
+│ (index) │ option │ percent │
+├─────────┼────────┼─────────┤
+│ 0       │ '4'    │ 25.3    │
+│ 1       │ '3'    │ 24.2    │
+│ 2       │ '1'    │ 18.1    │
+│ 3       │ '2'    │ 16.9    │
+│ 4       │ '5'    │ 15.5    │
+└─────────┴────────┴─────────┘
+confidence: 0.066
+```
+
+Read next to `rand-1-to-3.yml`, this pins down the mechanism: `4` is a token
+attractor in its own right, and the "middle" result above only appears because
+`4` and `7` were not offered. The rule is not "pick the middle" — it is "pick the
+heaviest available token, falling back to the middle when none is heavy".
+
+#### Odd or even — the LM was fair, the decision model was not
+
+```sh
+node lm.js dice-parity.yml
+┌─────────┬────────┬────────┬─────────┐
+│ (index) │ option │ picked │ percent │
+├─────────┼────────┼────────┼─────────┤
+│ 0       │ 'Odd'  │ 3      │ 50      │
+│ 1       │ 'Even' │ 3      │ 50      │
+└─────────┴────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js dice-parity.yml
+┌─────────┬────────┬─────────┐
+│ (index) │ option │ percent │
+├─────────┼────────┼─────────┤
+│ 0       │ 'Even' │ 71.1    │
+│ 1       │ 'Odd'  │ 28.9    │
+└─────────┴────────┴─────────┘
+confidence: 0.422
+```
+
+The only question in the set the language model answered exactly as a fair process
+would, and the decision model got it wrong at 71/29. It is the control that makes
+the rest credible: the language model is not uniformly bad at this task, it is bad
+in a specific, reproducible direction, and the two models fail differently.
+
+## Part 2 — Category questions
+
+No correct distribution exists for these questions: "pick a random animal" has no
+uniform truth to compare against, and one could argue any answer reflects taste
+rather than error. They are included because they show the same retrieval
+behaviour at a coarser grain — which member of a category the model reaches for
+first — and because the language model and the decision model often rank the
+category completely differently. Read them as a survey, not as a measurement.
+
+### Numbers
 
 ```sh
 node lm.js numbers.yml -i 16
@@ -65,7 +489,7 @@ node decision.js numbers.yml
 confidence: 0.065
 ```
 
-## Coin-flip
+### Coin-flip
 
 ```sh
 node lm.js -i 13 coin-flip.yml
@@ -88,7 +512,7 @@ node decision.js coin-flip.yml
 confidence: 0.702
 ```
 
-## Colors
+### Colors
 
 ```sh
 node lm.js colors.yml
@@ -145,7 +569,7 @@ node decision.js colors.yml
 confidence: 0.998
 ```
 
-## Animals
+### Animals
 
 ```sh
 node lm.js animals.yml -i 30
@@ -184,7 +608,7 @@ node decision.js animals.yml
 confidence: 0.101
 ```
 
-## Fruits
+### Fruits
 
 ```sh
 node lm.js fruits.yml -i 20
@@ -223,7 +647,7 @@ node decision.js fruits.yml
 confidence: 0.024
 ```
 
-## Musical instruments
+### Musical instruments
 
 ```sh
 node lm.js instruments.yml
@@ -262,7 +686,7 @@ node decision.js instruments.yml
 confidence: 0.298
 ```
 
-## Planets
+### Planets
 
 ```sh
 node lm.js planets.yml -i 20
@@ -297,7 +721,7 @@ node decision.js planets.yml
 confidence: 0.637
 ```
 
-## Pizza toppings
+### Pizza toppings
 
 ```sh
 node lm.js pizza-toppings.yml
@@ -336,7 +760,7 @@ node decision.js pizza-toppings.yml
 confidence: 0.172
 ```
 
-## Months
+### Months
 
 ```sh
 node lm.js months.yml
@@ -379,7 +803,7 @@ node decision.js months.yml
 confidence: 0.375
 ```
 
-## Nonsense words
+### Nonsense words
 
 ```sh
 node lm.js nonsense-words.yml
@@ -414,7 +838,7 @@ node decision.js nonsense-words.yml
 confidence: 0.140
 ```
 
-## Days
+### Days
 
 ```sh
 node lm.js days.yml
@@ -447,7 +871,7 @@ node decision.js days.yml
 confidence: 0.050
 ```
 
-## Letters
+### Letters
 
 ```sh
 node lm.js letters.yml

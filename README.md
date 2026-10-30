@@ -123,10 +123,16 @@ answers:
 
 Example sets: `animals.yml`, `colors.yml`, `fruits.yml`, `numbers.yml`,
 `coin-flip.yml`, `days.yml`, `letters.yml`, `months.yml`, `planets.yml`,
-`pizza-toppings.yml`, `instruments.yml`, `nonsense-words.yml`. None is a default —
-pass whichever file you want. Keep sets small: the same set has to be cheap
-enough to sample many times with `lm.js` before it can be compared with a
-decision model.
+`pizza-toppings.yml`, `instruments.yml`, `nonsense-words.yml`.
+
+The sets added for the fairness tests are processes with a known uniform answer,
+so any preference in the output is measurable: `binary-digit.yml`, `yes-no.yml`,
+`roulette.yml`, `card-suits.yml`, `vowels.yml`, `dice.yml`, `ab-ba.yml`,
+`rand-1-to-3.yml`, `rand-1-to-5.yml`, `two-coins.yml`, `dice-parity.yml`.
+
+None is a default — pass whichever file you want. Keep sets small: the same set
+has to be cheap enough to sample many times with `lm.js` before it can be
+compared with a decision model.
 
 ## Options
 

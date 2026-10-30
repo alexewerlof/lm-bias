@@ -1,0 +1,7 @@
+question: Pick a random number between 1 and 5.
+answers:
+  - "1"
+  - "2"
+  - "3"
+  - "4"
+  - "5"

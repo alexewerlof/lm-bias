@@ -1,0 +1,6 @@
+question: Flip two fair coins. Pick the random outcome.
+answers:
+  - "Heads, Heads"
+  - "Heads, Tails"
+  - "Tails, Heads"
+  - "Tails, Tails"

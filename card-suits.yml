@@ -1,0 +1,6 @@
+question: Pick a random suit from a standard deck of cards.
+answers:
+  - Hearts
+  - Diamonds
+  - Clubs
+  - Spades
