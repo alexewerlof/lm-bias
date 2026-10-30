@@ -1,19 +1,30 @@
 # Results
 
-Observed model bias when asking the same multiple-choice question repeatedly.
+Observed model bias when asking the same multiple-choice question repeatedly, for
+a language model and a decision model side by side.
 
-| Setting  | Value                                             |
-| -------- | ------------------------------------------------- |
-| Model    | Gemma 4 12B (`gemma-4-12B-it`)                    |
-| Thinking | Default                                           |
-| Sampling | Default                                           |
-| Hardware | Mac Mini M4                                       |
-| Runtime  | llama.cpp (`llama-server`, OpenAI-compatible API) |
-| Client   | `node lm.js <question-set> [-i <iterations>]`     |
+Every test appears twice: the language-model block first (how often each answer
+was sampled), then the decision-model block (the probability each answer is given).
+Both blocks are copied verbatim from the runs, so the `percent` columns are
+directly comparable.
 
-Numbers below are copied verbatim from the runs. Each row counts how many of the
-iterations picked that answer.
-Every loop ran fresh, meaning the model did not see its historical performance.
+## Models
+
+| Setting  | Language model                                  | Decision model                              |
+| -------- | ----------------------------------------------- | ------------------------------------------- |
+| Model    | Gemma 4 12B (`gemma-4-12B-it`)                  | Laya (`laya-classifier`)                    |
+| Thinking | Default                                         | Not applicable                              |
+| Sampling | Default                                         | Not applicable                              |
+| Hardware | Mac Mini M4                                     | Mac Mini M4                                 |
+| Runtime  | llama.cpp (`llama-server`, `/chat/completions`) | llama.cpp (`llama-server`, `/v1/systemone`) |
+| Client   | `node lm.js <question-set> [-i <iterations>]`   | `node decision.js <question-set>`           |
+
+The language model samples one answer per iteration and each row counts how many
+iterations picked that answer; every loop ran fresh, so the model did not see its
+historical performance. The decision model answers once with a probability for
+every answer, so its blocks have no iteration count and no `picked` column, and a
+repeated call returns identical numbers. `confidence` is the model's own
+confidence in its pick, on a 0–1 scale.
 
 ## Numbers
 
@@ -35,6 +46,25 @@ node lm.js numbers.yml -i 16
 └─────────┴────────┴────────┴─────────┘
 ```
 
+```sh
+node decision.js numbers.yml
+┌─────────┬────────┬─────────┐
+│ (index) │ option │ percent │
+├─────────┼────────┼─────────┤
+│ 0       │ '7'    │ 15.9    │
+│ 1       │ '9'    │ 13.5    │
+│ 2       │ '6'    │ 13.1    │
+│ 3       │ '8'    │ 10.8    │
+│ 4       │ '4'    │ 10.5    │
+│ 5       │ '3'    │ 9.5     │
+│ 6       │ '10'   │ 9.3     │
+│ 7       │ '5'    │ 8.9     │
+│ 8       │ '1'    │ 5.5     │
+│ 9       │ '2'    │ 3.1     │
+└─────────┴────────┴─────────┘
+confidence: 0.065
+```
+
 ## Coin-flip
 
 ```sh
@@ -45,6 +75,17 @@ node lm.js -i 13 coin-flip.yml
 │ 0       │ 'Heads' │ 12     │ 92.3    │
 │ 1       │ 'Tails' │ 1      │ 7.7     │
 └─────────┴─────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js coin-flip.yml
+┌─────────┬─────────┬─────────┐
+│ (index) │ option  │ percent │
+├─────────┼─────────┼─────────┤
+│ 0       │ 'Heads' │ 85.1    │
+│ 1       │ 'Tails' │ 14.9    │
+└─────────┴─────────┴─────────┘
+confidence: 0.702
 ```
 
 ## Colors
@@ -76,6 +117,34 @@ node lm.js colors.yml
 └─────────┴───────────┴────────┴─────────┘
 ```
 
+```sh
+node decision.js colors.yml
+┌─────────┬───────────┬─────────┐
+│ (index) │ option    │ percent │
+├─────────┼───────────┼─────────┤
+│ 0       │ 'Purple'  │ 99.8    │
+│ 1       │ 'Cyan'    │ 0.1     │
+│ 2       │ 'White'   │ 0       │
+│ 3       │ 'Black'   │ 0       │
+│ 4       │ 'Red'     │ 0       │
+│ 5       │ 'Blue'    │ 0       │
+│ 6       │ 'Green'   │ 0       │
+│ 7       │ 'Yellow'  │ 0       │
+│ 8       │ 'Orange'  │ 0       │
+│ 9       │ 'Pink'    │ 0       │
+│ 10      │ 'Brown'   │ 0       │
+│ 11      │ 'Gray'    │ 0       │
+│ 12      │ 'Magenta' │ 0       │
+│ 13      │ 'Teal'    │ 0       │
+│ 14      │ 'Indigo'  │ 0       │
+│ 15      │ 'Violet'  │ 0       │
+│ 16      │ 'Maroon'  │ 0       │
+│ 17      │ 'Olive'   │ 0       │
+│ 18      │ 'Navy'    │ 0       │
+└─────────┴───────────┴─────────┘
+confidence: 0.998
+```
+
 ## Animals
 
 ```sh
@@ -94,6 +163,25 @@ node lm.js animals.yml -i 30
 │ 8       │ 'Monkey'   │ 0      │ 0       │
 │ 9       │ 'Kangaroo' │ 0      │ 0       │
 └─────────┴────────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js animals.yml
+┌─────────┬────────────┬─────────┐
+│ (index) │ option     │ percent │
+├─────────┼────────────┼─────────┤
+│ 0       │ 'Panda'    │ 19.1    │
+│ 1       │ 'Monkey'   │ 13.9    │
+│ 2       │ 'Zebra'    │ 13      │
+│ 3       │ 'Bear'     │ 10.1    │
+│ 4       │ 'Tiger'    │ 9.5     │
+│ 5       │ 'Giraffe'  │ 8.3     │
+│ 6       │ 'Kangaroo' │ 7.2     │
+│ 7       │ 'Penguin'  │ 7.2     │
+│ 8       │ 'Elephant' │ 6.8     │
+│ 9       │ 'Lion'     │ 5       │
+└─────────┴────────────┴─────────┘
+confidence: 0.101
 ```
 
 ## Fruits
@@ -116,6 +204,25 @@ node lm.js fruits.yml -i 20
 └─────────┴──────────────┴────────┴─────────┘
 ```
 
+```sh
+node decision.js fruits.yml
+┌─────────┬──────────────┬─────────┐
+│ (index) │ option       │ percent │
+├─────────┼──────────────┼─────────┤
+│ 0       │ 'Watermelon' │ 12.2    │
+│ 1       │ 'Pineapple'  │ 11.5    │
+│ 2       │ 'Banana'     │ 11.2    │
+│ 3       │ 'Orange'     │ 11      │
+│ 4       │ 'Strawberry' │ 10.9    │
+│ 5       │ 'Pear'       │ 10.7    │
+│ 6       │ 'Peach'      │ 9.8     │
+│ 7       │ 'Melon'      │ 8.5     │
+│ 8       │ 'Apple'      │ 7.4     │
+│ 9       │ 'Grape'      │ 6.7     │
+└─────────┴──────────────┴─────────┘
+confidence: 0.024
+```
+
 ## Musical instruments
 
 ```sh
@@ -136,6 +243,25 @@ node lm.js instruments.yml
 └─────────┴─────────────┴────────┴─────────┘
 ```
 
+```sh
+node decision.js instruments.yml
+┌─────────┬─────────────┬─────────┐
+│ (index) │ option      │ percent │
+├─────────┼─────────────┼─────────┤
+│ 0       │ 'Violin'    │ 36.8    │
+│ 1       │ 'Flute'     │ 11.4    │
+│ 2       │ 'Guitar'    │ 10.4    │
+│ 3       │ 'Piano'     │ 9.6     │
+│ 4       │ 'Cello'     │ 7.4     │
+│ 5       │ 'Harp'      │ 6.9     │
+│ 6       │ 'Clarinet'  │ 6       │
+│ 7       │ 'Drums'     │ 4.2     │
+│ 8       │ 'Saxophone' │ 4       │
+│ 9       │ 'Trumpet'   │ 3.3     │
+└─────────┴─────────────┴─────────┘
+confidence: 0.298
+```
+
 ## Planets
 
 ```sh
@@ -152,6 +278,23 @@ node lm.js planets.yml -i 20
 │ 6       │ 'Uranus'  │ 0      │ 0       │
 │ 7       │ 'Neptune' │ 0      │ 0       │
 └─────────┴───────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js planets.yml
+┌─────────┬───────────┬─────────┐
+│ (index) │ option    │ percent │
+├─────────┼───────────┼─────────┤
+│ 0       │ 'Uranus'  │ 68.2    │
+│ 1       │ 'Jupiter' │ 11.3    │
+│ 2       │ 'Neptune' │ 6.7     │
+│ 3       │ 'Mars'    │ 6.1     │
+│ 4       │ 'Saturn'  │ 2.2     │
+│ 5       │ 'Venus'   │ 2.1     │
+│ 6       │ 'Mercury' │ 1.7     │
+│ 7       │ 'Earth'   │ 1.7     │
+└─────────┴───────────┴─────────┘
+confidence: 0.637
 ```
 
 ## Pizza toppings
@@ -172,6 +315,25 @@ node lm.js pizza-toppings.yml
 │ 8       │ 'Olives'      │ 0      │ 0       │
 │ 9       │ 'Bell pepper' │ 0      │ 0       │
 └─────────┴───────────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js pizza-toppings.yml
+┌─────────┬───────────────┬─────────┐
+│ (index) │ option        │ percent │
+├─────────┼───────────────┼─────────┤
+│ 0       │ 'Bacon'       │ 25.5    │
+│ 1       │ 'Ham'         │ 18.2    │
+│ 2       │ 'Pineapple'   │ 17.9    │
+│ 3       │ 'Pepperoni'   │ 10.3    │
+│ 4       │ 'Olives'      │ 8.3     │
+│ 5       │ 'Mushroom'    │ 5.6     │
+│ 6       │ 'Sausage'     │ 5.6     │
+│ 7       │ 'Spinach'     │ 3.4     │
+│ 8       │ 'Bell pepper' │ 3.2     │
+│ 9       │ 'Onion'       │ 2.1     │
+└─────────┴───────────────┴─────────┘
+confidence: 0.172
 ```
 
 ## Months
@@ -196,6 +358,27 @@ node lm.js months.yml
 └─────────┴─────────────┴────────┴─────────┘
 ```
 
+```sh
+node decision.js months.yml
+┌─────────┬─────────────┬─────────┐
+│ (index) │ option      │ percent │
+├─────────┼─────────────┼─────────┤
+│ 0       │ 'August'    │ 42.7    │
+│ 1       │ 'April'     │ 16.6    │
+│ 2       │ 'July'      │ 11.1    │
+│ 3       │ 'June'      │ 11      │
+│ 4       │ 'November'  │ 11      │
+│ 5       │ 'May'       │ 3.2     │
+│ 6       │ 'September' │ 1.7     │
+│ 7       │ 'October'   │ 1.7     │
+│ 8       │ 'March'     │ 0.8     │
+│ 9       │ 'February'  │ 0.2     │
+│ 10      │ 'January'   │ 0       │
+│ 11      │ 'December'  │ 0       │
+└─────────┴─────────────┴─────────┘
+confidence: 0.375
+```
+
 ## Nonsense words
 
 ```sh
@@ -214,6 +397,23 @@ node lm.js nonsense-words.yml
 └─────────┴─────────┴────────┴─────────┘
 ```
 
+```sh
+node decision.js nonsense-words.yml
+┌─────────┬─────────┬─────────┐
+│ (index) │ option  │ percent │
+├─────────┼─────────┼─────────┤
+│ 0       │ 'Zib'   │ 24.8    │
+│ 1       │ 'Vok'   │ 16.3    │
+│ 2       │ 'Quast' │ 11.5    │
+│ 3       │ 'Nek'   │ 11.2    │
+│ 4       │ 'Plarn' │ 10      │
+│ 5       │ 'Miv'   │ 9.3     │
+│ 6       │ 'Drox'  │ 8.6     │
+│ 7       │ 'Torp'  │ 8.2     │
+└─────────┴─────────┴─────────┘
+confidence: 0.140
+```
+
 ## Days
 
 ```sh
@@ -229,6 +429,22 @@ node lm.js days.yml
 │ 5       │ 'Saturday'  │ 0      │ 0       │
 │ 6       │ 'Sunday'    │ 0      │ 0       │
 └─────────┴─────────────┴────────┴─────────┘
+```
+
+```sh
+node decision.js days.yml
+┌─────────┬─────────────┬─────────┐
+│ (index) │ option      │ percent │
+├─────────┼─────────────┼─────────┤
+│ 0       │ 'Sunday'    │ 18.6    │
+│ 1       │ 'Monday'    │ 16.9    │
+│ 2       │ 'Tuesday'   │ 15.6    │
+│ 3       │ 'Saturday'  │ 15.5    │
+│ 4       │ 'Wednesday' │ 13.6    │
+│ 5       │ 'Friday'    │ 10.1    │
+│ 6       │ 'Thursday'  │ 9.7     │
+└─────────┴─────────────┴─────────┘
+confidence: 0.050
 ```
 
 ## Letters
@@ -267,39 +483,37 @@ node lm.js letters.yml
 └─────────┴────────┴────────┴─────────┘
 ```
 
-# Decision model
-
-The decision model answers in a single pass and returns the probability of every
-answer, so these runs have no iteration count and no `picked` column: each row is
-that answer's probability as a percentage. Repeating the call returns identical
-numbers.
-
-| Setting    | Value                                                          |
-| ---------- | -------------------------------------------------------------- |
-| Model      | Laya (`laya-classifier`)                                       |
-| Runtime    | llama.cpp (`llama-server`, `/v1/systemone`, `choice` questions) |
-| Hardware   | Mac Mini M4                                                    |
-| Client     | `node decision.js <question-set>`                               |
-| Confidence | Model-reported confidence in its own pick, 0–1                  |
-
-## Numbers
-
 ```sh
-node decision.js numbers.yml
-Pick a random number between 1 and 10.
+node decision.js letters.yml
 ┌─────────┬────────┬─────────┐
 │ (index) │ option │ percent │
 ├─────────┼────────┼─────────┤
-│ 0       │ '7'    │ 15.9    │
-│ 1       │ '9'    │ 13.5    │
-│ 2       │ '6'    │ 13.1    │
-│ 3       │ '8'    │ 10.8    │
-│ 4       │ '4'    │ 10.5    │
-│ 5       │ '3'    │ 9.5     │
-│ 6       │ '10'   │ 9.3     │
-│ 7       │ '5'    │ 8.9     │
-│ 8       │ '1'    │ 5.5     │
-│ 9       │ '2'    │ 3.1     │
+│ 0       │ 'G'    │ 34.1    │
+│ 1       │ 'Y'    │ 24.4    │
+│ 2       │ 'J'    │ 14.3    │
+│ 3       │ 'Q'    │ 4.9     │
+│ 4       │ 'K'    │ 3.8     │
+│ 5       │ 'Z'    │ 2.9     │
+│ 6       │ 'U'    │ 2.3     │
+│ 7       │ 'V'    │ 2.3     │
+│ 8       │ 'N'    │ 2       │
+│ 9       │ 'M'    │ 1.7     │
+│ 10      │ 'F'    │ 1.3     │
+│ 11      │ 'R'    │ 1.3     │
+│ 12      │ 'O'    │ 1.2     │
+│ 13      │ 'L'    │ 0.7     │
+│ 14      │ 'T'    │ 0.7     │
+│ 15      │ 'I'    │ 0.6     │
+│ 16      │ 'S'    │ 0.5     │
+│ 17      │ 'P'    │ 0.3     │
+│ 18      │ 'C'    │ 0.2     │
+│ 19      │ 'E'    │ 0.2     │
+│ 20      │ 'H'    │ 0.2     │
+│ 21      │ 'A'    │ 0.1     │
+│ 22      │ 'B'    │ 0       │
+│ 23      │ 'D'    │ 0       │
+│ 24      │ 'W'    │ 0       │
+│ 25      │ 'X'    │ 0       │
 └─────────┴────────┴─────────┘
-confidence: 0.065
+confidence: 0.314
 ```

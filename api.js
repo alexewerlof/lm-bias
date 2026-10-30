@@ -5,8 +5,7 @@
 // The decision API answers a map of questions; every call here asks exactly one.
 const QUESTION_ID = "question";
 
-const joinUrl = (endpoint, path) =>
-  `${endpoint.replace(/\/+$/, "")}${path}`;
+const joinUrl = (endpoint, path) => `${endpoint.replace(/\/+$/, "")}${path}`;
 
 async function post(endpoint, path, token, payload) {
   const target = joinUrl(endpoint, path);

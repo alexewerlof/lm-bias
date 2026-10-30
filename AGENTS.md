@@ -15,16 +15,16 @@ and readable.
 
 ## Layout
 
-| Path                                                  | Role                                                                                                                                                                       |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lm.js`                                               | Language-model probe. CLI parsing, the iteration loop, and the summary all live here by design — keep each script a single flat file rather than splitting it further.       |
-| `decision.js`                                         | Decision-model probe. One `/v1/systemone` call per run; no `--iterations`, because the probabilities are deterministic.                                                    |
-| `lib.js`                                              | Shared plumbing: config loading, question-set loading, percent rounding, table printing. Keep it free of script-specific logic.                                            |
-| `api.js`                                              | The only place that talks HTTP: `askLanguageModel` (one chat completion constrained to the offered options) and `askDecisionModel` (one `/v1/systemone` choice question).   |
-| `animals.yml`, `colors.yml`, `fruits.yml`, `numbers.yml` | Example question sets. None is a default.                                                                                                                                  |
-| `.env`                                                | Local secrets/config. Git-ignored, never commit it.                                                                                                                        |
-| `.env.example`                                        | Committed template for `.env`.                                                                                                                                             |
-| `README.md`                                           | User-facing docs. Update it when CLI surface or setup changes.                                                                                                             |
+| Path                                                     | Role                                                                                                                                                                      |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lm.js`                                                  | Language-model probe. CLI parsing, the iteration loop, and the summary all live here by design — keep each script a single flat file rather than splitting it further.    |
+| `decision.js`                                            | Decision-model probe. One `/v1/systemone` call per run; no `--iterations`, because the probabilities are deterministic.                                                   |
+| `lib.js`                                                 | Shared plumbing: config loading, question-set loading, percent rounding, table printing. Keep it free of script-specific logic.                                           |
+| `api.js`                                                 | The only place that talks HTTP: `askLanguageModel` (one chat completion constrained to the offered options) and `askDecisionModel` (one `/v1/systemone` choice question). |
+| `animals.yml`, `colors.yml`, `fruits.yml`, `numbers.yml` | Example question sets. None is a default.                                                                                                                                 |
+| `.env`                                                   | Local secrets/config. Git-ignored, never commit it.                                                                                                                       |
+| `.env.example`                                           | Committed template for `.env`.                                                                                                                                            |
+| `README.md`                                              | User-facing docs. Update it when CLI surface or setup changes.                                                                                                            |
 
 ## Commands
 
