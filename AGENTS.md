@@ -6,16 +6,22 @@ rediscovering the layout.
 
 ## What this is
 
-A single-script CLI: it asks an OpenAI-compatible LLM the same multiple-choice
-question N times and prints how the model distributed its answers. It is used to
-probe model bias with predefined question/answer sets.
+Two small CLIs that probe model bias with the same question/answer sets. `lm.js`
+asks an OpenAI-compatible language model the same multiple-choice question N times
+and prints how it distributed its answers. `decision.js` asks a decision model
+once and prints the probability it assigns to each answer. Shared boilerplate
+lives in `lib.js` and shared HTTP calls in `api.js`, so both scripts stay short
+and readable.
 
 ## Layout
 
 | Path                                                  | Role                                                                                                                                                                       |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.js`                                            | The entire program. Config loading, CLI parsing, YAML validation, and the iteration loop all live here by design — keep it a single flat file rather than splitting it up. |
-| `animals.yml`, `color.yml`, `fruit.yml`, `number.yml` | Example question sets. None is a default.                                                                                                                                  |
+| `lm.js`                                               | Language-model probe. CLI parsing, the iteration loop, and the summary all live here by design — keep each script a single flat file rather than splitting it further.       |
+| `decision.js`                                         | Decision-model probe. One `/v1/systemone` call per run; no `--iterations`, because the probabilities are deterministic.                                                    |
+| `lib.js`                                              | Shared plumbing: config loading, question-set loading, percent rounding, table printing. Keep it free of script-specific logic.                                            |
+| `api.js`                                              | The only place that talks HTTP: `askLanguageModel` (one chat completion constrained to the offered options) and `askDecisionModel` (one `/v1/systemone` choice question).   |
+| `animals.yml`, `colors.yml`, `fruits.yml`, `numbers.yml` | Example question sets. None is a default.                                                                                                                                  |
 | `.env`                                                | Local secrets/config. Git-ignored, never commit it.                                                                                                                        |
 | `.env.example`                                        | Committed template for `.env`.                                                                                                                                             |
 | `README.md`                                           | User-facing docs. Update it when CLI surface or setup changes.                                                                                                             |
@@ -25,28 +31,32 @@ probe model bias with predefined question/answer sets.
 ```sh
 npm install                                  # install deps
 cp .env.example .env                         # first-time setup, then edit
-node index.js animals.yml                    # run (10 iterations)
-node index.js animals.yml --iterations 20    # override iteration count
-node index.js animals.yml -i 20              # same, short flag
+node lm.js animals.yml                       # run (10 iterations)
+node lm.js animals.yml --iterations 20       # override iteration count
+node lm.js animals.yml -i 20                 # same, short flag
+node decision.js numbers.yml                 # one decision-model call
 ```
 
 There is no test suite, linter, or formatter script configured. Verify behavior by
-running the script; a single iteration against a local endpoint takes roughly
-10–25 seconds, so prefer `--iterations 1` when smoke-testing.
+running the script; a single language-model iteration against a local endpoint
+takes roughly 10–25 seconds, so prefer `--iterations 1` when smoke-testing.
 
 ## Configuration
 
-- `.env` provides `LLM_ENDPOINT` and `LLM_MODEL`. Both are required and the script
-  throws if either is missing. The endpoint must be an OpenAI-compatible base URL;
-  `@ai-sdk/openai-compatible` appends `/chat/completions` (no `/v1` suffix added by
-  us — include `/v1` yourself if the provider needs it).
-- `LLM_TOKEN` is optional and passed as the provider `apiKey`; the provider only
-  adds an `Authorization: Bearer` header when it is set. Never make it required —
-  local servers work without it.
+- `.env` provides `LLM_ENDPOINT`, `LLM_MODEL`, and `DECISION_MODEL`. All three are
+  required and the scripts throw if any is missing; `lm.js` reads `LLM_MODEL` and
+  `decision.js` reads `DECISION_MODEL`, so both can share one endpoint. The endpoint
+  must be an OpenAI-compatible base URL; `api.js` calls `/chat/completions` on it
+  (no `/v1` suffix added by us — include `/v1` yourself if the provider needs it),
+  and `/v1/systemone` for the decision model.
+- `LLM_TOKEN` is optional and sent as a `Bearer` token by both scripts. Never make
+  it required — local servers work without it.
+- The decision model must advertise `decisions` in `architecture.output_modalities`
+  of `GET /v1/models`; a plain chat model returns 501 from `/v1/systemone`.
 - The question set is the **first positional argument** and is required — there is
   intentionally no default file.
-- `--iterations` / `-i` defaults to `ITERATIONS_PER_ANSWER` (5) times the number
-  of answers in the question file (2 answers → 10 runs, 6 answers → 30 runs).
+- `--iterations` / `-i` ( `lm.js` only) defaults to `ITERATIONS_PER_ANSWER` times the
+  number of answers in the question file (2 answers → 6 runs, 6 answers → 18 runs).
 
 Question file format:
 
@@ -68,13 +78,15 @@ validated. Adding stricter checks is fine, but keep them inline and short.
   wrapper or try/catch. Errors are meant to surface as thrown exceptions with
   stack traces, not as hand-written user messages — do not add a catch-all handler.
 - Validation is inline and ordered: env vars → positional file → iterations → YAML
-  fields.
+  fields. The env, positional, and YAML steps are the `lib.js` helpers; everything
+  else stays inline in the script that owns it.
 - `config({ quiet: true })` is deliberate: dotenv v18 prints an injection tip
-  otherwise.
-- Match the existing style in `index.js` (2-space indent, double quotes, semicolons);
+  otherwise. `lib.js` calls it once, at import time.
+- Match the existing style in `lm.js` (2-space indent, double quotes, semicolons);
   do not introduce a second formatting style.
-- Do not add a config module, defaults file, or option-parsing helper — earlier
-  iterations of this repo had those and they were deliberately removed.
+- Do not split the scripts further than `lib.js` and `api.js`: config, defaults
+  files, and option-parsing helpers were tried in earlier iterations and
+  deliberately removed. HTTP calls belong in `api.js` only; no third-party SDK.
 
 ## Publishing notes
 

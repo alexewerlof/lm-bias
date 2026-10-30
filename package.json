@@ -2,10 +2,11 @@
   "name": "lm-bias",
   "version": "1.0.0",
   "description": "Ask any OpenAI-compatible model the same multiple-choice question N times and see how it distributes its answers.",
-  "main": "index.js",
+  "main": "lm.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node lm.js",
+    "decision": "node decision.js"
   },
   "engines": {
     "node": ">=20.12.0"
@@ -14,8 +15,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@ai-sdk/openai-compatible": "^3.0.80",
-    "ai": "^7.0.156",
     "dotenv": "^18.0.9",
     "js-yaml": "^5.5.0"
   }

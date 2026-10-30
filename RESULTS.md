@@ -9,7 +9,7 @@ Observed model bias when asking the same multiple-choice question repeatedly.
 | Sampling | Default                                           |
 | Hardware | Mac Mini M4                                       |
 | Runtime  | llama.cpp (`llama-server`, OpenAI-compatible API) |
-| Client   | `node index.js <question-set> [-i <iterations>]`  |
+| Client   | `node lm.js <question-set> [-i <iterations>]`     |
 
 Numbers below are copied verbatim from the runs. Each row counts how many of the
 iterations picked that answer.
@@ -18,7 +18,7 @@ Every loop ran fresh, meaning the model did not see its historical performance.
 ## Numbers
 
 ```sh
-node index.js numbers.yml -i 16
+node lm.js numbers.yml -i 16
 ┌─────────┬────────┬────────┬─────────┐
 │ (index) │ option │ picked │ percent │
 ├─────────┼────────┼────────┼─────────┤
@@ -38,7 +38,7 @@ node index.js numbers.yml -i 16
 ## Coin-flip
 
 ```sh
-node index.js -i 13 coin-flip.yml
+node lm.js -i 13 coin-flip.yml
 ┌─────────┬─────────┬────────┬─────────┐
 │ (index) │ option  │ picked │ percent │
 ├─────────┼─────────┼────────┼─────────┤
@@ -50,7 +50,7 @@ node index.js -i 13 coin-flip.yml
 ## Colors
 
 ```sh
-node index.js colors.yml
+node lm.js colors.yml
 ┌─────────┬───────────┬────────┬─────────┐
 │ (index) │ option    │ picked │ percent │
 ├─────────┼───────────┼────────┼─────────┤
@@ -79,7 +79,7 @@ node index.js colors.yml
 ## Animals
 
 ```sh
-node index.js animals.yml -i 30
+node lm.js animals.yml -i 30
 ┌─────────┬────────────┬────────┬─────────┐
 │ (index) │ option     │ picked │ percent │
 ├─────────┼────────────┼────────┼─────────┤
@@ -99,7 +99,7 @@ node index.js animals.yml -i 30
 ## Fruits
 
 ```sh
-node index.js fruits.yml -i 20
+node lm.js fruits.yml -i 20
 ┌─────────┬──────────────┬────────┬─────────┐
 │ (index) │ option       │ picked │ percent │
 ├─────────┼──────────────┼────────┼─────────┤
@@ -119,7 +119,7 @@ node index.js fruits.yml -i 20
 ## Musical instruments
 
 ```sh
-node index.js instruments.yml
+node lm.js instruments.yml
 ┌─────────┬─────────────┬────────┬─────────┐
 │ (index) │ option      │ picked │ percent │
 ├─────────┼─────────────┼────────┼─────────┤
@@ -139,7 +139,7 @@ node index.js instruments.yml
 ## Planets
 
 ```sh
-node index.js planets.yml -i 20
+node lm.js planets.yml -i 20
 ┌─────────┬───────────┬────────┬─────────┐
 │ (index) │ option    │ picked │ percent │
 ├─────────┼───────────┼────────┼─────────┤
@@ -157,7 +157,7 @@ node index.js planets.yml -i 20
 ## Pizza toppings
 
 ```sh
-node index.js pizza-toppings.yml
+node lm.js pizza-toppings.yml
 ┌─────────┬───────────────┬────────┬─────────┐
 │ (index) │ option        │ picked │ percent │
 ├─────────┼───────────────┼────────┼─────────┤
@@ -177,7 +177,7 @@ node index.js pizza-toppings.yml
 ## Months
 
 ```sh
-node index.js months.yml
+node lm.js months.yml
 ┌─────────┬─────────────┬────────┬─────────┐
 │ (index) │ option      │ picked │ percent │
 ├─────────┼─────────────┼────────┼─────────┤
@@ -199,7 +199,7 @@ node index.js months.yml
 ## Nonsense words
 
 ```sh
-node index.js nonsense-words.yml
+node lm.js nonsense-words.yml
 ┌─────────┬─────────┬────────┬─────────┐
 │ (index) │ option  │ picked │ percent │
 ├─────────┼─────────┼────────┼─────────┤
@@ -217,7 +217,7 @@ node index.js nonsense-words.yml
 ## Days
 
 ```sh
-node index.js days.yml
+node lm.js days.yml
 ┌─────────┬─────────────┬────────┬─────────┐
 │ (index) │ option      │ picked │ percent │
 ├─────────┼─────────────┼────────┼─────────┤
@@ -234,7 +234,7 @@ node index.js days.yml
 ## Letters
 
 ```sh
-node index.js letters.yml
+node lm.js letters.yml
 ┌─────────┬────────┬────────┬─────────┐
 │ (index) │ option │ picked │ percent │
 ├─────────┼────────┼────────┼─────────┤
@@ -265,4 +265,41 @@ node index.js letters.yml
 │ 24      │ 'Y'    │ 0      │ 0       │
 │ 25      │ 'Z'    │ 0      │ 0       │
 └─────────┴────────┴────────┴─────────┘
+```
+
+# Decision model
+
+The decision model answers in a single pass and returns the probability of every
+answer, so these runs have no iteration count and no `picked` column: each row is
+that answer's probability as a percentage. Repeating the call returns identical
+numbers.
+
+| Setting    | Value                                                          |
+| ---------- | -------------------------------------------------------------- |
+| Model      | Laya (`laya-classifier`)                                       |
+| Runtime    | llama.cpp (`llama-server`, `/v1/systemone`, `choice` questions) |
+| Hardware   | Mac Mini M4                                                    |
+| Client     | `node decision.js <question-set>`                               |
+| Confidence | Model-reported confidence in its own pick, 0–1                  |
+
+## Numbers
+
+```sh
+node decision.js numbers.yml
+Pick a random number between 1 and 10.
+┌─────────┬────────┬─────────┐
+│ (index) │ option │ percent │
+├─────────┼────────┼─────────┤
+│ 0       │ '7'    │ 15.9    │
+│ 1       │ '9'    │ 13.5    │
+│ 2       │ '6'    │ 13.1    │
+│ 3       │ '8'    │ 10.8    │
+│ 4       │ '4'    │ 10.5    │
+│ 5       │ '3'    │ 9.5     │
+│ 6       │ '10'   │ 9.3     │
+│ 7       │ '5'    │ 8.9     │
+│ 8       │ '1'    │ 5.5     │
+│ 9       │ '2'    │ 3.1     │
+└─────────┴────────┴─────────┘
+confidence: 0.065
 ```
